@@ -9,6 +9,7 @@ from docx.shared import Pt
 from docx.shared import RGBColor
 from pprint import pprint
 from bs4 import BeautifulSoup
+import sys
 
 #THIS USES PYHTHON 2.X NOT 3.X
 
@@ -18,7 +19,7 @@ settings._is_configured = True
 settings.citform = 4
 querier.apply_settings(settings)
 
-user_input = raw_input("Enter the title of one of your citations here: ")
+user_input = sys.argv[1]#raw_input("Enter the title of one of your citations here: ")
 user_input_formatted = '"' + user_input + '"'
 print("The article you entered is " + user_input_formatted)
 
@@ -124,14 +125,14 @@ for x in range(2,10):
 	basetext_title = cleantext_title.get_text()
 	
 	try:
-		funk = basetext_title.encode('ascii')
+		funk = basetext_title.encode('utf-8')
 	# print(basetext_title)
 	except Exception, e: 
 		continue
 
 	cleantext = BeautifulSoup(fucking_match)
 	basetext = cleantext.get_text()
-	print(basetext)
+	print(basetext.encode('utf-8'))
 
 	if '[BOOK][B]' in funk:
 		doob1 = funk.replace('[BOOK][B]', '')
@@ -198,9 +199,9 @@ print("Open the word document that has been saved to this folder and copy the te
 
 
 #below this line is word doc creator
-document = Document()
-run = document.add_paragraph().add_run(authors_time)
-font = run.font
-font.name = 'Calibri'
-font.size = Pt(12)
-document.save('demo.docx')
+# document = Document()
+# run = document.add_paragraph().add_run(authors_time)
+# font = run.font
+# font.name = 'Calibri'
+# font.size = Pt(12)
+# document.save('demo.docx')

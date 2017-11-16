@@ -69,7 +69,7 @@
 	<key>PythonInfoDict</key>
 	<dict>
 		<key>PythonExecutable</key>
-		<string>/Developer-old/Python/citations/venv/bin/python</string>
+		<string>/usr/local/opt/python/bin/python2.7</string>
 		<key>PythonLongVersion</key>
 		<string>2.7.11 (default, Jan 22 2016, 08:29:18) 
 [GCC 4.2.1 Compatible Apple LLVM 7.0.2 (clang-700.1.81)]</string>

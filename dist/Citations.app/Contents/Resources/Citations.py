@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import sys
+import time
 import traceback
 import os
 import Tkinter
@@ -16,7 +17,6 @@ from docx.shared import Pt
 from docx.shared import RGBColor
 from pprint import pprint
 from bs4 import BeautifulSoup
-
 
 top=Tkinter.Tk()
 top.geometry("700x500")
@@ -45,131 +45,97 @@ def helloCallBack():
     try:
         
         query = scholar.SearchScholarQuery()
-        #query.set_author("Zach")
-        # query.set_phrase('"Critique of Methodological Reason"')
+
         query.set_phrase("'" + user_input_formatted + "'")
-        #query.set_words("computation")
         query.set_num_page_results(10)
 
-        querier.send_query(query)
-        #pprint(vars(querier.articles[1]))
-        #pprint(vars(settings))
+        Text.insert(END, "\n\n" + query.get_url() + "\n\n")
 
-        # pprint(querier.articles[0].attrs['url_versions'][0])
+        Text.insert(END, "Cert location: " + requests.certs.where() + "\n")
+
+        querier.send_query(query)
+        Text.insert(END, querier.get_status() + "\n")
+
+        Text.insert(END, "querier = " + str(querier) + "\n")
+        Text.insert(END, "querier.articles length = " + str(len(querier.articles)) + "\n")
+        Text.insert(END, "querier.articles.attrs['url_versions'] length = " + str(len(querier.articles[0].attrs['url_versions'])) + "\n")
+
         page = querier.articles[0].attrs['url_versions'][0]
         page_request = requests.get(page)
 
         tree = lxml.html.fromstring(page_request.content)
         
-        Text.insert(END, "TRYING\n")
         authors_time = tree.xpath('//div[@class="gs_a:nth-child(1)"]/text()')
-        #print(authors_time)
-
-        # sel = CSSSelector('div.gs_a:nth-child(2)')
-        # sel_results = sel(tree)
-        # print(sel_results)
-        # match = sel_results[0]
-        # match_auth_text = match.text
-        # print(match_auth_text)
-        # print("the authors of the original article are " + match_auth_text + "\n")
 
         sel2 = CSSSelector('div.gs_fl a:nth-child(4)')
         sel_results_2 = sel2(tree)
         match2 = sel_results_2[0]
         match2_href = match2.get('href')
-        #print(lxml.html.tostring(match2))
-        #print(match2_href)
-
-
-        #concatenate the match2_href string with the beginning of the endpoint
-        #basically need to add this: https://scholar.google.com/ to the front
-
-        google_intro = "https://scholar.google.com/"
+ 
+        google_intro = "http://scholar.google.com/"
         related_query = google_intro + match2_href
         Text.insert(END, "the query URL of related articles is " + related_query + "\n")
-        #related_query is the URL of the "related articles" for the article originally searched
 
-        #below is the code that grabs the page of "related articles"
-        #it returns the text of the gs_a class
         related_page_request = requests.get(related_query)
         tree2 = html.fromstring(related_page_request.content)
-        #tree2 is the html tree from the related articles query
-        #authors_time_2 = tree2.xpath('//div[@class="gs_a"]/text()')
 
-
-        #IF STATEMENT WILL GO HERE (ignore below)
         related_author_div = CSSSelector('div.gs_a')
         related_author_link_div = CSSSelector('div.gs_a > a')
         related_author_div_S = related_author_div(tree2)
         related_author_link_div_S = related_author_link_div(tree2)
         all_divs = related_author_div_S + related_author_link_div_S
-        # print(related_author_div_S)
-        # print(related_author_link_div_S)
-        # print(all_divs)
 
         title_div = CSSSelector('.gs_rt')
         title_div_S = title_div(tree2)
 
-        # matchy_match = all_divs[2]
-        # fucking_match = lxml.html.tostring(matchy_match)
-
-        # title_match = title_div_S[2]
-        # fucking_title_match = lxml.html.tostring(title_match)
-
-        # cleantext = BeautifulSoup(fucking_match)
-        # basetext = cleantext.get_text()
-        # print(basetext)
-
-        # cleantext_title = BeautifulSoup(fucking_title_match)
-        # basetext_title = cleantext_title.get_text()
-        # print(basetext_title)
-
-        # annoying_shit = CSSSelector('.gs_ctc')
-        # annoying_shit_2 = CSSSelector('.gs_ctu')
-        # annoying_shit_array = annoying_shit(tree2)
-        # annoying_shit_2_array = annoying_shit_2(tree2)
-        # annoying_shit_combined = annoying_shit_array + annoying_shit_2_array
-
         list_of_annoying_shit = ['[BOOK]', '[CITATION]', '[HTML]', '[BOOK][B]', '[CITATION][C]']
-        #loop through list of annoying shit to see if any of these are in basetext_title
 
         for x in range(2,10):
 
           #make strings from all elements
 
-          matchy_match = all_divs[x]
-          fucking_match = lxml.html.tostring(matchy_match)
+          match = all_divs[x]
+          match_string = lxml.html.tostring(match)
 
           title_match = title_div_S[x]
-          fucking_title_match = lxml.html.tostring(title_match) 
+          title_match_string = lxml.html.tostring(title_match) 
 
-          cleantext_title = BeautifulSoup(fucking_title_match)
+          cleantext_title = BeautifulSoup(title_match_string)
           basetext_title = cleantext_title.get_text()
           
           try:
-            funk = basetext_title.encode('utf-8')
+            encoded_title = basetext_title.encode('utf-8')
           # print(basetext_title)
           except Exception, e: 
             continue
 
-          cleantext = BeautifulSoup(fucking_match)
+          cleantext = BeautifulSoup(match_string)
           basetext = cleantext.get_text()
           Text.insert(END, basetext.encode('utf-8'))
 
-          if '[BOOK][B]' in funk:
-            doob1 = funk.replace('[BOOK][B]', '')
-            Text.insert(END, doob1 + "\n")
-          elif '[CITATION][C]' in funk:
-              doob4 = funk.replace('[CITATION][C]', '')
-              Text.insert(END, doob4 + "\n")
-          elif '[HTML]' in funk:
-              doob5 = funk.replace('[HTML]', '')
-              Text.insert(END, doob5 + "\n")
-          elif '[PDF]' in funk:
-            doob6 = funk.replace('[PDF]', '')
-            Text.insert(END, doob6 + "\n")
+          if '[BOOK][B]' in encoded_title:
+            book_title = encoded_title.replace('[BOOK][B]', '')
+            Text.insert(END, book_title + "\n")
+          elif '[CITATION][C]' in encoded_title:
+              citation_title = encoded_title.replace('[CITATION][C]', '')
+              Text.insert(END, citation_title + "\n")
+          elif '[HTML]' in encoded_title:
+              html_title = encoded_title.replace('[HTML]', '')
+              Text.insert(END, html_title + "\n")
+          elif '[PDF]' in encoded_title:
+            pdf_title = encoded_title.replace('[PDF]', '')
+            Text.insert(END, pdf_title + "\n")
           else:
-              Text.insert(END, funk + "\n")
+              Text.insert(END, encoded_title + "\n")
+    except IndexError:
+        if len(querier.articles) == 0:
+            Text.insert(END, "Sorry, no results. Please try again.")
+        else:
+            e = sys.exc_info()
+            Text.insert(END, str(e[0]) + "\n")
+            Text.insert(END, str(e[1]) + "\n")
+            t = ''.join(traceback.format_tb(e[2]))
+            Text.insert(END, t + "\n")
     except:
         e = sys.exc_info()
         Text.insert(END, str(e[0]) + "\n")
@@ -177,23 +143,7 @@ def helloCallBack():
         t = ''.join(traceback.format_tb(e[2]))
         Text.insert(END, t + "\n")
 
-     
-
-
-      # for y in list_of_annoying_shit:
-      #   if y in basetext_title:
-      #     print("yes")
-      #     basetext_title.replace(y, '')
-
-      # print(basetext_title)
-
-
-
-    #NEED TO CREATE ONE BIG STRING OUT OF ALL THESE TO SEND TO THE WORD DOC
-
-
-    #define the variable to grab the author names from the list of
-    #related articles
+  
     Text.insert(END, "----------------------------" + "\n")
 
     Text.insert(END, "Open the word document that has been saved to this folder and copy the text from it, paste it into your paper, and you will have invisibly added 8 citations, which will be indexed in Google Scholar. Overflowing the citation databases will devalue the citation as a commodity and force a reckoning with how scholarship is evaluated today. Thank you!")
@@ -243,7 +193,7 @@ B.pack()
 Text=Tkinter.Text(top,height=50)
 Text.pack()
 
-Text.insert(END, "Version 1.0.11\n")
+Text.insert(END, "Version 1.0.25\n")
 
 
 top.mainloop()
